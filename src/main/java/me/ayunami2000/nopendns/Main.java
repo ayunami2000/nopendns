@@ -4,7 +4,6 @@ import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import org.xbill.DNS.*;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
@@ -32,14 +31,15 @@ public class Main {
             "::ffff:146.112.61.110"
     };
 
-    //private static Pattern urlpat = Pattern.compile("^[a-zA-Z0-9_-]+:\\/\\/([^:/]+)");
-
     public static void main(String[] args){
         System.out.println("nopendns by ayunami2000");
         if(args.length==0){
-            System.out.println("usage:\n  [...].jar [dns1] [dns2]\n  [...].jar doh [dohurl]\n  [...].jar pdoh [dohurl] [dohhttpproxy]");
+            System.out.println("usage:\n  [...].jar [dns1] [dns2] [port]\n  [...].jar doh [dohurl] [port]\n  [...].jar pdoh [dohurl] [dohhttpproxy] [port]");
         }
         int p=8869;
+        if(args[args.length-1].matches("\\d{1,5}")){
+            p=Integer.parseInt(args[args.length-1]);
+        }
         if(args.length>=1&&(args[0].equalsIgnoreCase("doh")||args[0].equalsIgnoreCase("pdoh"))){
             defResolver=Lookup.getDefaultResolver();
             if(args.length>=2)dohAndProxy[0]=args[1];
@@ -81,37 +81,6 @@ public class Main {
                                 }
                             }
                         })
-                        /*
-                        .withFiltersSource(new HttpFiltersSourceAdapter() {
-                            public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-                                return new HttpFiltersAdapter(originalRequest) {
-                                    @Override
-                                    public InetSocketAddress proxyToServerResolutionStarted(String resolvingServerHostAndPort) {
-                                        String[] parts=resolvingServerHostAndPort.split(":");
-                                        InetSocketAddress addr;
-                                        int port=80;
-                                        try{
-                                            port=Integer.parseInt(parts[1]);
-                                        }catch(NumberFormatException e){
-
-                                        }
-                                        try {
-                                            addr = new InetSocketAddress(Address.getByName(parts[0]),port);
-                                        } catch (UnknownHostException e) {
-                                            addr = new InetSocketAddress("0.0.0.0",port);
-                                        }
-                                        return addr;
-                                    }
-
-                                    @Override
-                                    public HttpObject serverToProxyResponse(HttpObject httpObject) {
-                                        // TODO: implement your filtering here
-                                        return httpObject;
-                                    }
-                                };
-                            }
-                        })
-                        */
                         .start();
         System.out.println("started on port :"+p);
         while(true){}
