@@ -37,7 +37,7 @@ public class Main {
             System.out.println("usage:\n  [...].jar [dns1] [dns2] [port]\n  [...].jar doh [dohurl] [port]\n  [...].jar pdoh [dohurl] [dohhttpproxy] [port]");
         }
         int p=8869;
-        if(args[args.length-1].matches("\\d{1,5}")){
+        if(args.length>0&&args[args.length-1].matches("\\d{1,5}")){
             p=Integer.parseInt(args[args.length-1]);
         }
         if(args.length>=1&&(args[0].equalsIgnoreCase("doh")||args[0].equalsIgnoreCase("pdoh"))){
