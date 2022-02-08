@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 public class Main {
     private static String[] dnsServers=new String[]{"1.1.1.1","8.8.8.8"};
-    private static String[] dohAndProxy=new String[]{"https://dns.google/dns-query","127.0.0.1:9666"};
+    private static String[] dohAndProxy=new String[]{"https://1.1.1.1/dns-query","127.0.0.1:9666"};
     private static Resolver dohResolver=null;
     private static Resolver defResolver=null;
     private static final String[] blockList = new String[]{
