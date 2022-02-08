@@ -1,0 +1,2 @@
+# nopendns
+ no more opendns!!
