@@ -52,6 +52,7 @@ public class Main {
                 dohResolver = new ProxyDohResolver(dohAndProxy[0], new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxIpPort[0], Integer.parseInt(proxIpPort[1]))));
                 System.out.println("enabling proxied DoH!");
             }
+            //((ExtendedResolver)Lookup.getDefaultResolver()).addResolver(dohResolver);
         }else {
             if(args.length>=1)dnsServers[0]=args[0];
             if(args.length>=2)dnsServers[1]=args[1];
