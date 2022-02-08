@@ -2,9 +2,7 @@ package me.ayunami2000.nopendns;
 
 import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
-import org.xbill.DNS.Address;
-import org.xbill.DNS.Lookup;
-import org.xbill.DNS.ProxyDohResolver;
+import org.xbill.DNS.*;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -13,10 +11,11 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 
 public class Main {
-    public static String[] dnsServers=new String[]{"1.1.1.1","94.140.14.14"};
-    public static String[] dohAndProxy=new String[]{"https://dns.google/dns-query","127.0.0.1:9666"};
-    public static ProxyDohResolver dohResolver=null;
-    public static final String[] blockList = new String[]{
+    private static String[] dnsServers=new String[]{"1.1.1.1","8.8.8.8"};
+    private static String[] dohAndProxy=new String[]{"https://dns.google/dns-query","127.0.0.1:9666"};
+    private static Resolver dohResolver=null;
+    private static Resolver defResolver=null;
+    private static final String[] blockList = new String[]{
             "146.112.61.104",
             "::ffff:146.112.61.104",
             "146.112.61.105",
@@ -37,13 +36,22 @@ public class Main {
 
     public static void main(String[] args){
         System.out.println("nopendns by ayunami2000");
+        if(args.length==0){
+            System.out.println("usage:\n  [...].jar [dns1] [dns2]\n  [...].jar doh [dohurl]\n  [...].jar pdoh [dohurl] [dohhttpproxy]");
+        }
         int p=8869;
-        if(args.length>=1&&args[0].equalsIgnoreCase("doh")){
+        if(args.length>=1&&(args[0].equalsIgnoreCase("doh")||args[0].equalsIgnoreCase("pdoh"))){
+            defResolver=Lookup.getDefaultResolver();
             if(args.length>=2)dohAndProxy[0]=args[1];
-            if(args.length>=3)dohAndProxy[1]=args[2];
-            String[] proxIpPort=dohAndProxy[1].split(":",2);
-            dohResolver=new ProxyDohResolver(dohAndProxy[0],new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxIpPort[0], Integer.parseInt(proxIpPort[1]))));
-            Lookup.setDefaultResolver(dohResolver);
+            if(args[0].equalsIgnoreCase("doh")) {
+                dohResolver = new DohResolver(dohAndProxy[0]);
+                System.out.println("enabling DoH!");
+            }else{
+                if(args.length>=3)dohAndProxy[1]=args[2];
+                String[] proxIpPort = dohAndProxy[1].split(":", 2);
+                dohResolver = new ProxyDohResolver(dohAndProxy[0], new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxIpPort[0], Integer.parseInt(proxIpPort[1]))));
+                System.out.println("enabling proxied DoH!");
+            }
         }else {
             if(args.length>=1)dnsServers[0]=args[0];
             if(args.length>=2)dnsServers[1]=args[1];
@@ -61,10 +69,12 @@ public class Main {
                                 return new InetSocketAddress(Address.getByName(host), port);
                             }else {
                                 String norm = null;
+                                Lookup.setDefaultResolver(defResolver);
                                 try {
-                                    norm = InetAddress.getByName(host).getHostAddress();
+                                    norm = Address.getByName(host).getHostAddress();
                                 }catch(UnknownHostException e){}
                                 if(norm==null||Arrays.asList(blockList).contains(norm)){
+                                    Lookup.setDefaultResolver(dohResolver);
                                     return new InetSocketAddress(Address.getByName(host), port);
                                 }else{
                                     return new InetSocketAddress(host, port);
