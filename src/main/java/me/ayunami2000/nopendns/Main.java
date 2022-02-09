@@ -1,13 +1,26 @@
 package me.ayunami2000.nopendns;
 
+import at.jta.RegistryErrorException;
 import org.littleshoot.proxy.*;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import org.xbill.DNS.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+
+class ShutdownHook extends Thread {
+    public void run()
+    {
+        try {
+            Reg.restoreProxy();
+        } catch (RegistryErrorException e) {
+            System.out.println("WARNING: Unable to restore system proxy!");
+        }
+    }
+}
 
 public class Main {
     private static String[] dnsServers=new String[]{"1.1.1.1","8.8.8.8"};
@@ -30,15 +43,29 @@ public class Main {
             "146.112.61.110",
             "::ffff:146.112.61.110"
     };
+    private static int p=8869;
+    private static boolean setSysProxy=true;
+    public static String oldSysProxy=";<local>";
+    public static int oldSysProxyEnabled=0;
 
     public static void main(String[] args){
         System.out.println("nopendns by ayunami2000");
         if(args.length==0){
             System.out.println("usage:\n  [...].jar [dns1] [dns2] [port]\n  [...].jar doh [dohurl] [port]\n  [...].jar pdoh [dohurl] [dohhttpproxy] [port]");
         }
-        int p=8869;
         if(args.length>0&&args[args.length-1].matches("\\d{1,5}")){
             p=Integer.parseInt(args[args.length-1]);
+        }
+        try {
+            Reg.readProxy();
+            System.out.println(oldSysProxyEnabled);
+            System.exit(0);
+            Reg.setProxy("127.0.0.1:"+p+";<local>");
+            Runtime.getRuntime().addShutdownHook(new ShutdownHook());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Unable to set system proxy!");
+            setSysProxy=false;
         }
         if(args.length>=1&&(args[0].equalsIgnoreCase("doh")||args[0].equalsIgnoreCase("pdoh"))){
             defResolver=Lookup.getDefaultResolver();
