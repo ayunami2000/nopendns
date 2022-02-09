@@ -5,12 +5,23 @@ import com.sun.jna.platform.win32.WinReg;
 
 public class Reg {
     public static void readProxy() {
-        if(Advapi32Util.registryValueExists(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "ProxyServer")){
-            Main.oldSysProxyServer = Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "ProxyServer");
-        }
         //Main.oldSysProxy = Advapi32Util.registryGetBinaryValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Connections", "DefaultConnectionSettings");
         //Main.oldSavedProxy = Advapi32Util.registryGetBinaryValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Connections", "SavedLegacySettings");;
-        Main.oldSysProxyEnabled = Advapi32Util.registryGetIntValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "ProxyEnable");
+
+        if(!Advapi32Util.registryValueExists(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "CachedProxyServer")){
+            if(Advapi32Util.registryValueExists(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "ProxyServer")){
+                Main.oldSysProxyServer = Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "ProxyServer");
+                Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "CachedProxyServer", Main.oldSysProxyServer);
+            }
+        }else{
+            Main.oldSysProxyServer = Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "CachedProxyServer");
+        }
+        if(!Advapi32Util.registryValueExists(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "CachedProxyEnable")){
+            Main.oldSysProxyEnabled = Advapi32Util.registryGetIntValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "ProxyEnable");
+            Advapi32Util.registrySetIntValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "CachedProxyEnable", Main.oldSysProxyEnabled);
+        }else{
+            Main.oldSysProxyEnabled = Advapi32Util.registryGetIntValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "CachedProxyEnable");
+        }
     }
     public static void setProxy(String proxstr) {
         //byte[] prox = convertProxy(proxstr);
@@ -28,6 +39,9 @@ public class Reg {
         //Advapi32Util.registrySetBinaryValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Connections", "DefaultConnectionSettings", Main.oldSysProxy);
         //Advapi32Util.registrySetBinaryValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Connections", "SavedLegacySettings", Main.oldSavedProxy);
         Advapi32Util.registrySetIntValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "ProxyEnable", Main.oldSysProxyEnabled);
+
+        if(Main.oldSysProxyServer!=null)Advapi32Util.registryDeleteValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "CachedProxyServer");
+        Advapi32Util.registryDeleteValue(WinReg.HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", "CachedProxyEnable");
     }
     public static byte[] convertProxy(String prox){
         byte[] proxexc=";<local>".getBytes();

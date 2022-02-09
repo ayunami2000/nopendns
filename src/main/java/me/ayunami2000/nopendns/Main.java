@@ -50,12 +50,26 @@ public class Main {
     public static void main(String[] args){
         System.out.println("nopendns by ayunami2000");
         if(args.length==0){
-            System.out.println("usage:\n  [...].jar [dns1] [dns2] [port]\n  [...].jar doh [dohurl] [port]\n  [...].jar pdoh [dohurl] [dohhttpproxy] [port]");
+            System.out.println("usage:\n  [...].jar [dns1] [dns2] [port]\n  [...].jar doh [dohurl] [port]\n  [...].jar pdoh [dohurl] [dohhttpproxy] [port]\n  [...].jar revert\n  note: adding \"justproxy\" after the .jar part will disable setting the system proxy on Windows");
+        }
+        if(args.length==1&&args[0].equalsIgnoreCase("revert")){
+            try {
+                Reg.readProxy();
+                Reg.restoreProxy();
+            } catch (Exception e) {
+                System.out.println("WARNING: Unable to restore system proxy!");
+            }
+            return;
+        }
+        boolean doSetSysProxy=true;
+        if(args.length>0&&args[0].equalsIgnoreCase("justproxy")){
+            doSetSysProxy=false;
+            args=Arrays.copyOfRange(args, 1, args.length);
         }
         if(args.length>0&&args[args.length-1].matches("\\d{1,5}")){
             p=Integer.parseInt(args[args.length-1]);
         }
-        if(System.getProperty("os.name").startsWith("Windows")) {
+        if(doSetSysProxy&&System.getProperty("os.name").startsWith("Windows")) {
             try {
                 Reg.readProxy();
                 Reg.setProxy("127.0.0.1:" + p);
